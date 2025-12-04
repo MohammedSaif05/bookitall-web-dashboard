@@ -1,8 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./App.css";
 import logoImg from "./assets/logo.png"; // TEMP: replace with your real logo path
 
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Default login credentials
+    const defaultEmail = "admin@bookitall.com";
+    const defaultPassword = "admin";
+    
+    // Accept default credentials or any credentials for development
+    if (email && password) {
+      // Store login state (simple approach)
+      localStorage.setItem("isLoggedIn", "true");
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <div className="login-page">
       <div className="login-logo-wrapper">
@@ -15,7 +34,7 @@ const Login = () => {
         <h1 className="login-title">Sign In</h1>
         <p className="login-subtitle">Please enter your login details</p>
 
-        <form className="login-form">
+        <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
             <label htmlFor="email" className="login-label">
               Email Address
@@ -25,6 +44,9 @@ const Login = () => {
               type="email"
               className="login-input"
               placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -37,6 +59,9 @@ const Login = () => {
               type="password"
               className="login-input"
               placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
 
@@ -45,22 +70,12 @@ const Login = () => {
               <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <button type="button" className="login-link">
-              Forgot password?
-            </button>
           </div>
 
           <button type="submit" className="login-submit">
             Sign In
           </button>
         </form>
-
-        <p className="login-footer">
-          Don&apos;t have an account?{" "}
-          <button type="button" className="login-link">
-            Create one
-          </button>
-        </p>
       </div>
     </div>
   );
