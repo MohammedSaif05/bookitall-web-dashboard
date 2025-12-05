@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Store, LogOut } from 'lucide-react';
-import { FaUserCheck, FaClock } from 'react-icons/fa';
+import { FaUserCheck, FaClock, FaChevronDown, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import logoImg from './assets/logo.png';
 import sidebarLogo from './assets/sidebarlogo.png';
 import VerifiedVendors from './pages/VerifiedVendors';
@@ -72,7 +72,11 @@ const Dashboard = () => {
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label="Toggle sidebar"
           >
-            {isOpen ? "◀" : "▶"}
+            {isOpen ? (
+              <FaChevronLeft size={14} />
+            ) : (
+              <FaChevronRight size={14} />
+            )}
           </button>
         </div>
         <nav className="sidebar-nav">
@@ -92,12 +96,16 @@ const Dashboard = () => {
             >
               <Store className="sidebar-icon" size={20} />
               {isOpen && (
-                <>
-                  <span className="sidebar-item-label">Vendor</span>
+                <span className="sidebar-item-label">
+                  <span>Vendor</span>
                   <span className="dropdown-arrow">
-                    {vendorDropdownOpen ? '▼' : '▶'}
+                    {vendorDropdownOpen ? (
+                      <FaChevronDown size={12} />
+                    ) : (
+                      <FaChevronRight size={12} />
+                    )}
                   </span>
-                </>
+                </span>
               )}
             </button>
             {vendorDropdownOpen && (
