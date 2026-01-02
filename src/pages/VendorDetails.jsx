@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, MapPin, Phone, Mail, User, Clock, Calendar, Image as ImageIcon, FileText, Scissors } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Phone, Mail, User, Clock, Calendar, Image as ImageIcon, FileText, Scissors, CreditCard } from 'lucide-react';
 import { FaSync } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
@@ -42,6 +42,11 @@ const VendorDetails = () => {
   );
 
   const shopImages = useMemo(() => {
+    // If images are rejected, don't show sample images
+    if (vendor?.isBusinessImageApproved === false) {
+      return [];
+    }
+
     // Prioritize businessImages from new API response
     if (Array.isArray(vendor?.businessImages) && vendor.businessImages.length > 0) {
       return vendor.businessImages.slice(0, 2);
@@ -62,6 +67,7 @@ const VendorDetails = () => {
       return fallbackImages.slice(0, 2);
     }
 
+    // Only show sample images if images are not rejected
     return sampleShopImages;
   }, [vendor]);
 
@@ -69,6 +75,30 @@ const VendorDetails = () => {
   const businessDocument = useMemo(() => {
     return vendor?.businessDocument || null;
   }, [vendor]);
+
+  // Process bank details and remove duplicates
+  const uniqueBankDetails = useMemo(() => {
+    if (!vendor?.bankDetails || !Array.isArray(vendor.bankDetails)) {
+      return [];
+    }
+
+    // Remove duplicates based on accountNumber and ifscCode combination
+    const seen = new Set();
+    const unique = [];
+
+    vendor.bankDetails.forEach((bankDetail) => {
+      // Create a unique key from accountNumber and ifscCode
+      const key = `${bankDetail.accountNumber || ''}_${bankDetail.ifscCode || ''}`.toLowerCase().trim();
+      
+      // Only add if we haven't seen this combination before and key is not empty
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        unique.push(bankDetail);
+      }
+    });
+
+    return unique;
+  }, [vendor?.bankDetails]);
 
   // Show error toast if API call fails
   React.useEffect(() => {
@@ -338,10 +368,6 @@ const VendorDetails = () => {
                 <label>Alternate Phone</label>
                 <p>{formatPhoneNumber(vendor.alternatePhoneNumber) || 'N/A'}</p>
               </div>
-              <div className="info-item">
-                <label>Business Email</label>
-                <p>{vendor.businessEmail || 'N/A'}</p>
-              </div>
             </div>
           </section>
 
@@ -515,6 +541,71 @@ const VendorDetails = () => {
               )}
             </section>
           )}
+
+          {/* Bank Information */}
+          <section className="details-section">
+            <h2 className="section-title">
+              <CreditCard size={20} />
+              Bank Information
+            </h2>
+            {vendor.bankRejectMessage && (
+              <div className="rejection-message">
+                <span className="rejection-label">Rejection Reason:</span>
+                <span className="rejection-text">{vendor.bankRejectMessage}</span>
+              </div>
+            )}
+            {uniqueBankDetails.length > 0 ? (
+              <div className="bank-details-grid">
+                {uniqueBankDetails.map((bankDetail, index) => (
+                  <div key={index} className="bank-detail-card">
+                    <div className="bank-detail-header">
+                      <h3 className="bank-detail-title">Bank Account {index + 1}</h3>
+                    </div>
+                    <div className="bank-detail-content">
+                      {bankDetail.accountHolderName && (
+                        <div className="bank-detail-item">
+                          <label>Account Holder Name</label>
+                          <p>{bankDetail.accountHolderName}</p>
+                        </div>
+                      )}
+                      {bankDetail.accountNumber && (
+                        <div className="bank-detail-item">
+                          <label>Account Number</label>
+                          <p>{bankDetail.accountNumber}</p>
+                        </div>
+                      )}
+                      {bankDetail.ifscCode && (
+                        <div className="bank-detail-item">
+                          <label>IFSC Code</label>
+                          <p>{bankDetail.ifscCode}</p>
+                        </div>
+                      )}
+                      {bankDetail.bankName && (
+                        <div className="bank-detail-item">
+                          <label>Bank Name</label>
+                          <p>{bankDetail.bankName}</p>
+                        </div>
+                      )}
+                      {bankDetail.branchName && (
+                        <div className="bank-detail-item">
+                          <label>Branch Name</label>
+                          <p>{bankDetail.branchName}</p>
+                        </div>
+                      )}
+                      {bankDetail.accountType && (
+                        <div className="bank-detail-item">
+                          <label>Account Type</label>
+                          <p>{bankDetail.accountType}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">No bank information available.</p>
+            )}
+          </section>
 
           {/* Shop Images */}
           <section className="details-section">
