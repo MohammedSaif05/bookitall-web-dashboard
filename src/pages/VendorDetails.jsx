@@ -5,7 +5,7 @@ import { FaSync } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import Loading from '../components/common/Loading';
-import { getVendorDetailsByUserId, approveVendorProduction, rejectVendorImages, rejectVendorDocument } from '../api/vendors';
+import { getVendorDetailsByUserId, approveVendorProduction, rejectVendorImages, rejectVendorDocument, rejectVendorServices } from '../api/vendors';
 import { ROUTES } from '../utils/constants';
 import { useCachedApi } from '../hooks/useCachedApi';
 import { CACHE_KEYS } from '../utils/cache';
@@ -25,6 +25,7 @@ const VendorDetails = () => {
   const [approving, setApproving] = useState(false);
   const [rejectingImages, setRejectingImages] = useState(false);
   const [rejectingDocument, setRejectingDocument] = useState(false);
+  const [rejectingServices, setRejectingServices] = useState(false);
 
   // Create API function wrapper
   const fetchVendorDetails = React.useCallback(async () => {
@@ -187,6 +188,40 @@ const VendorDetails = () => {
       toast.error(err?.message || 'Failed to reject document');
     } finally {
       setRejectingDocument(false);
+    }
+  };
+
+  const handleRejectServices = async () => {
+    if (!id || vendor?.isBusinessVerified) return;
+
+    const { value: reason } = await Swal.fire({
+      title: 'Reject Services',
+      input: 'text',
+      inputLabel: 'Reason for rejection',
+      inputPlaceholder: 'Enter reason for rejecting services',
+      inputValidator: (value) => (!value ? 'Reason is required' : undefined),
+      showCancelButton: true,
+      confirmButtonText: 'Reject',
+      confirmButtonColor: '#ef4444',
+    });
+
+    if (!reason) return;
+
+    try {
+      setRejectingServices(true);
+      await rejectVendorServices(id, reason);
+      await refetch(true);
+      Swal.fire({
+        icon: 'success',
+        title: 'Services rejected',
+        text: 'The services have been rejected successfully.',
+        timer: 2200,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      toast.error(err?.message || 'Failed to reject services');
+    } finally {
+      setRejectingServices(false);
     }
   };
 
@@ -467,6 +502,17 @@ const VendorDetails = () => {
                   </div>
                 ))}
               </div>
+              {!vendor.isBusinessVerified && (
+                <div className="section-actions">
+                  <button
+                    className="reject-button"
+                    onClick={handleRejectServices}
+                    disabled={rejectingServices}
+                  >
+                    {rejectingServices ? 'Rejecting…' : 'Reject Services'}
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
